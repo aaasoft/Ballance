@@ -171,7 +171,6 @@ namespace Ballance2.Menu
                     resolutions = Screen.resolutions;
                     var GrResolution = MessageCenter.GetComponentInstance("GrResolution").GetComponent<Updown>();
                     var currentResolution = Screen.currentResolution;
-                    var isMathed = false;
                     for (int i = 0; i < resolutions.Length; i++)
                     {
                         var resolution = resolutions[i];
@@ -183,15 +182,15 @@ namespace Ballance2.Menu
                           && Math.Abs(currentResolution.refreshRate - resolution.refreshRate) < 2
                         )
                         {
-                            isMathed = true;
                             updateGrResolution.Invoke(i);
                         }
                     }
-                    GrResolution.AddOption("Default");
-                    if (!isMathed)
-                    {
-                        updateGrResolution.Invoke(resolutions.Length);
-                    }
+#if UNITY_IPHONE || UNITY_ANDROID
+                    GrResolution.AddOption("25");
+                    GrResolution.AddOption("50");
+                    GrResolution.AddOption("75");
+                    GrResolution.AddOption("100");
+#endif
                 }
                 if (qualities == null)
                 {

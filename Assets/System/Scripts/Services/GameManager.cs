@@ -807,12 +807,14 @@ namespace Ballance2.Services
             resolutions = Screen.resolutions;
 
             for (int i = 0; i < resolutions.Length; i++)
-                if (resolutions[i].width == Screen.width && resolutions[i].height == Screen.height)
+            {
+                var resolution = resolutions[i];
+                if (resolution.width == Screen.width && resolution.height == Screen.height)
                 {
                     defaultResolution = i;
                     break;
                 }
-
+            }
             //设置更新事件
             GameSettings.RegisterSettingsUpdateCallback(SettingConstants.SettingsVideo, OnVideoSettingsUpdated);
             GameSettings.RequireSettingsLoad(SettingConstants.SettingsVideo);
@@ -830,32 +832,57 @@ namespace Ballance2.Services
 
             if (resolutionsSet >= 0)
             {
+                var currentResolution = Screen.currentResolution;
+                var currentResolutionAspectRatio = currentResolution.width * 1F / currentResolution.height;
+                var isCurrentResolutionLandspace = currentResolutionAspectRatio > 1;
+                int resolutionWidth, resolutionHeight;
+
                 if (resolutionsSet < resolutions.Length)
                 {
                     var resolution = resolutions[resolutionsSet];
-                    var resolutionWidth = resolution.width;
-                    var resolutionHeight = resolution.height;
-
-                    var currentResolution = Screen.currentResolution;
-
-
-                    //宽高比
-                    var currentResolutionAspectRatio = currentResolution.width * 1F / currentResolution.height;
-                    var resolutionAspectRatio = resolution.width * 1F / resolution.height;
-
-                    var isCurrentResolutionLandspace = currentResolutionAspectRatio > 1;
-                    var isResolutionLandspace = resolutionAspectRatio > 1;
-
-                    if (isCurrentResolutionLandspace ^ isResolutionLandspace)
-                    {
-                        var tmpInt = resolutionWidth;
-                        resolutionWidth = resolutionHeight;
-                        resolutionHeight = tmpInt;
-                    }
-                    Screen.SetResolution(resolutionWidth, resolutionHeight, fullScreen, resolution.refreshRate);
-                    //发出屏幕大小更改事件
-                    GameMediator.DispatchGlobalEvent(GameEventNames.EVENT_SCREEN_SIZE_CHANGED, resolutionWidth, resolutionHeight);
+                    resolutionWidth = resolution.width;
+                    resolutionHeight = resolution.height;
                 }
+                else
+                {
+                    var defaultResolution = Screen.resolutions[0];
+                    resolutionWidth = defaultResolution.width;
+                    resolutionHeight = defaultResolution.height;
+                    var percent = 100;
+                    switch (resolutionsSet - resolutions.Length)
+                    {
+                        //25%
+                        case 0:
+                            percent = 25;
+                            break;
+                        //50%
+                        case 1:
+                            percent = 50;
+                            break;
+                        //75%
+                        case 2:
+                            percent = 75;
+                            break;
+                        //100%
+                        case 3:
+                            percent = 100;
+                            break;
+                    }
+                    resolutionWidth = resolutionWidth * percent / 100;
+                    resolutionHeight = resolutionHeight * percent / 100;
+                }
+                var resolutionAspectRatio = resolutionWidth * 1F / resolutionHeight;
+                var isResolutionLandspace = resolutionAspectRatio > 1;
+
+                if (isCurrentResolutionLandspace ^ isResolutionLandspace)
+                {
+                    var tmpInt = resolutionWidth;
+                    resolutionWidth = resolutionHeight;
+                    resolutionHeight = tmpInt;
+                }
+                Screen.SetResolution(resolutionWidth, resolutionHeight, fullScreen);
+                //发出屏幕大小更改事件
+                GameMediator.DispatchGlobalEvent(GameEventNames.EVENT_SCREEN_SIZE_CHANGED, resolutionWidth, resolutionHeight);
             }
             if (fullScreen != Screen.fullScreen)
                 Screen.fullScreen = fullScreen;
